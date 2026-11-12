@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#171717">
+<title>Русский язык</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{--bg:#171717;--card:#242424;--text:#f7f7f7;--muted:#aaa;--accent:#4d83ff;--line:#373737}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font:16px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.wrap{padding:18px 16px 36px;max-width:760px;margin:auto}.top{display:flex;align-items:center;gap:12px;margin:6px 0 22px}.logo{width:48px;height:48px;border-radius:15px;background:#2d4f9b;display:grid;place-items:center;font-size:25px}.top h1{font-size:22px;margin:0}.top p{color:var(--muted);font-size:13px;margin:4px 0 0}
+h2{font-size:20px;margin:18px 0 12px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.tile{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px 14px;min-height:136px;text-align:left;color:var(--text)}.tile .emoji{font-size:30px;display:block;margin-bottom:12px}.tile strong{display:block;font-size:16px}.tile small{display:block;color:var(--muted);line-height:1.35;margin-top:7px}
+.hidden{display:none!important}.back{background:none;border:0;color:var(--accent);font-size:15px;padding:8px 0;margin-bottom:8px}.searchrow{display:flex;gap:8px;margin:14px 0}.searchrow input{min-width:0;flex:1;background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:13px;padding:13px;font-size:16px}.searchrow button,.primary{background:var(--accent);color:white;border:0;border-radius:13px;padding:12px 15px;font-size:15px;font-weight:600}
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 16px}.pill{background:var(--card);border:1px solid var(--line);color:var(--text);border-radius:20px;padding:9px 12px;font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:15px;margin:10px 0;line-height:1.5;overflow-wrap:anywhere}.card h3{font-size:17px;margin:0 0 8px}.muted{color:var(--muted);font-size:13px}.result{white-space:pre-wrap}.error{color:#ff9e9e}.actions{display:flex;gap:8px;flex-wrap:wrap}.actions button{background:#303030;color:white;border:1px solid #444;border-radius:12px;padding:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><div class="logo">📚</div><div><h1>Русский язык</h1><p>Грамматика и литература в одном месте</p></div></div>
+  <section id="home">
+    <h2>Выбери раздел</h2>
+    <div class="grid">
+      <button class="tile" onclick="openSection('grammar')"><span class="emoji">📘</span><strong>Русская грамматика</strong><small>Правила, части речи, падежи, орфография</small></button>
+      <button class="tile" onclick="openSection('literature')"><span class="emoji">📚</span><strong>Литература</strong><small>Писатели, поэты, биографии и произведения</small></button>
+    </div>
+    <div class="card"><strong>Как пользоваться</strong><div class="muted" style="margin-top:6px">Открой раздел и введи тему или имя автора. Краткая информация появится здесь же, без перехода на другой сайт.</div></div>
+  </section>
+  <section id="section" class="hidden">
+    <button class="back" onclick="goHome()">‹ Все разделы</button>
+    <h2 id="sectionTitle"></h2>
+    <div class="searchrow"><input id="query" placeholder="Например: падежи или Пушкин"><button onclick="search()">Найти</button></div>
+    <div id="suggestions" class="pills"></div>
+    <div id="results"><div class="muted">Введи тему и нажми «Найти».</div></div>
+  </section>
+</div>
+<script>
+const tg=window.Telegram?.WebApp; if(tg){tg.ready();tg.expand(); try{tg.setHeaderColor('#171717');tg.setBackgroundColor('#171717')}catch(e){}}
+let section='grammar';
+const topics={
+ grammar:['Падежи','Имя существительное','Глагол','Имя прилагательное','Местоимение','Наречие','Орфография','Пунктуация','Синтаксис','Причастие'],
+ literature:['Александр Пушкин','Лев Толстой','Фёдор Достоевский','Антон Чехов','Михаил Лермонтов','Николай Гоголь','Иван Тургенев','Евгений Онегин','Война и мир','Преступление и наказание']
+};
+const rules={
+ 'падежи':'В русском языке обычно выделяют шесть падежей: именительный (кто? что?), родительный (кого? чего?), дательный (кому? чему?), винительный (кого? что?), творительный (кем? чем?), предложный (о ком? о чём?). Падеж слова определяется по вопросу и его роли в предложении.',
+ 'имя существительное':'Имя существительное — самостоятельная часть речи, которая обозначает предмет и отвечает на вопросы «кто?» или «что?». Имеет род, число и падеж. Примеры: ученик, книга, море.',
+ 'глагол':'Глагол обозначает действие или состояние и отвечает на вопросы «что делать?» / «что сделать?». Изменяется по временам, лицам и числам; в прошедшем времени — по родам в единственном числе.',
+ 'имя прилагательное':'Имя прилагательное обозначает признак предмета и отвечает на вопросы «какой? какая? какое? какие?». Обычно согласуется с существительным в роде, числе и падеже.',
+ 'орфография':'Орфография — система правил написания слов. При сомнении проверяй слово по орфографическому словарю и учитывай правила приставок, корней, суффиксов и окончаний.',
+ 'пунктуация':'Пунктуация регулирует постановку знаков препинания. Точка завершает повествовательное предложение, вопросительный знак — вопрос, восклицательный — эмоциональное высказывание. Запятые могут разделять части сложного предложения и однородные члены.'
+};
+function openSection(s){section=s;document.getElementById('home').classList.add('hidden');document.getElementById('section').classList.remove('hidden');document.getElementById('sectionTitle').textContent=s==='grammar'?'📘 Русская грамматика':'📚 Литература';document.getElementById('query').value='';document.getElementById('results').innerHTML='<div class="muted">Введи тему и нажми «Найти».</div>';document.getElementById('suggestions').innerHTML='';topics[s].forEach(t=>{let b=document.createElement('button');b.className='pill';b.textContent=t;b.onclick=()=>{document.getElementById('query').value=t;search()};document.getElementById('suggestions').appendChild(b)})}
+function goHome(){document.getElementById('section').classList.add('hidden');document.getElementById('home').classList.remove('hidden')}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+async function search(){
+ const q=document.getElementById('query').value.trim();if(!q)return;
+ const out=document.getElementById('results');out.innerHTML='<div class="card">Ищу информацию…</div>';
+ if(section==='grammar' && rules[q.toLowerCase()]){out.innerHTML=`<article class="card"><h3>${esc(q)}</h3><div class="result">${esc(rules[q.toLowerCase()])}</div><p class="muted">Краткое объяснение для обучения.</p></article>`;return}
+ try{
+  const url='https://ru.wikipedia.org/w/api.php?'+new URLSearchParams({action:'query',generator:'search',gsrsearch:q,gsrnamespace:'0',gsrlimit:'4',prop:'extracts|info',exintro:'1',explaintext:'1',inprop:'url',format:'json',utf8:'1',origin:'*'});
+  const res=await fetch(url);if(!res.ok)throw new Error('HTTP '+res.status);const data=await res.json();
+  const pages=Object.values(data.query?.pages||{}).sort((a,b)=>(a.index||999)-(b.index||999));
+  if(!pages.length){out.innerHTML='<div class="card">Ничего не найдено. Попробуй другой запрос.</div>';return}
+  out.innerHTML='';
+  pages.slice(0,4).forEach(p=>{const article=document.createElement('article');article.className='card';article.innerHTML=`<h3>${esc(p.title||'Статья')}</h3><div class="result">${esc((p.extract||'Краткое описание недоступно.').slice(0,3500))}</div><p class="muted">Источник: русская Википедия</p>`;out.appendChild(article)});
+ }catch(e){out.innerHTML='<div class="card error">Не удалось загрузить информацию. Проверь подключение к интернету и попробуй снова.</div>'}
+}
+document.getElementById('query').addEventListener('keydown',e=>{if(e.key==='Enter')search()});
+</script>
+</body>
+</html>
